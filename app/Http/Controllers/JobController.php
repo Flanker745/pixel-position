@@ -6,6 +6,9 @@ use App\Models\Job;
 use App\Http\Requests\StoreJobRequest;
 use App\Http\Requests\UpdateJobRequest;
 use App\Models\Tag;
+use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Auth;
 
 class JobController extends Controller
 {
@@ -14,8 +17,9 @@ class JobController extends Controller
      */
     public function index()
     {
-        $jobs = Job::all();
-        $featuredJob = Job::where('featured' , true)->get();
+        $jobs = Job::latest()->get();
+
+        $featuredJob = Job::latest()->where('featured' , true)->get();
         return view("Jobs.index",[
             "jobs" => $jobs,
             "featuredJob" => $featuredJob,
@@ -28,46 +32,37 @@ class JobController extends Controller
      */
     public function create()
     {
-        //
+        return view("Jobs.create");
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreJobRequest $request)
-    {
-        //
-    }
+    public function store(Request $request)
+{
+    // Validate the request data
+    $validatedData = $request->validate([
+        "title" => "required",
+        "salary" => "required",
+        "location" => "required",
+        "schedule" => "required",
+        "workTime" => "required",
+        "url" => "required|active_url",
+        "tags" => "nullable"
+    ]);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Job $job)
-    {
-        //
-    }
+    // Set the featured value
+    $featured = $request->has('featured') ? true : false;
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Job $job)
-    {
-        //
+    // Merge the featured value into the validated data
+    $validatedData['featured'] = $featured;
+    $job = Auth::user()->employer->jobs()->create(Arr::except($validatedData, "tags"));
+    if($validatedData['tags'] ?? false){
+        foreach(explode(",", $validatedData["tags"]) as $tag){
+            $job->tag(trim($tag));
+        }
     }
+    return redirect("/");
+}
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateJobRequest $request, Job $job)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Job $job)
-    {
-        //
-    }
 }

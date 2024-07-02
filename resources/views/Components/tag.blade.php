@@ -10,4 +10,4 @@
     }
 @endphp
 
-<a href="/tags/{{ strtolower($tag->name) }}" class="{{ $classes }}">{{ $tag->name }}</a>
+<a href="/tags/{{ $tag->name }}" class="{{ $classes }}">{{ $tag->name }}</a>
